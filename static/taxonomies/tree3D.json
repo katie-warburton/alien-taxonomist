@@ -1,0 +1,21 @@
+{
+    "name": "ROOT",
+    "root": true,
+    "visible": true,
+    "children": [
+        {
+            "name": "A", "visible": true , "children": [
+                {"name": "A1", "visible": true, "items": ["2", "3", "4"]},
+                {"name": "A3", "visible": false, "items": []},
+                {"name": "A2", "visible": true, "items": ["6", "7", "8"]}
+            ]
+        },
+        {
+            "name": "B", "visible": true, "children": [
+                {"name": "B1", "visible": true, "items": ["26", "25", "24"]},
+                {"name": "B3", "visible": false, "items": []},
+                {"name": "B2", "visible": true, "items": ["30", "29", "28"]}
+            ]
+        }
+    ]
+}

@@ -1,0 +1,22 @@
+{
+    "name": "ROOT",
+    "root": true,
+    "visible": true,
+    "children": [
+        {
+            "name": "A",
+            "visible": true,
+            "items": ["2", "3", "4", "6", "7", "8"]
+        },
+        {
+            "name": "C",
+            "visible": false,
+            "items": []
+        },
+        {
+            "name": "B",
+            "visible": true,
+            "items": ["30", "29", "28", "26", "25", "24"]
+        }
+    ]
+}
