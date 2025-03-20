@@ -156,7 +156,7 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                     node.depth = depth;
                     nodes_by_level[depth]['SIZE'] += 1;
                     nodes_by_name[node.name] = node;
-                    if (node.children) {
+                    if (node.children.length !== 0) {
                         node.children.forEach(child => traverse(child, depth+1));
                         node.items = node.children.flatMap(child => child.items);
                         // assign current node as parent to children
@@ -235,7 +235,7 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                     node.max_x = node.center_x + width/2;
                     node.width = (2*trial.node_border_width) + (node.item_size * get_cols(node.items.length, node.cols));
                     node.height = (2*trial.node_border_width) + (node.item_size * get_rows(node.items.length, node.cols));
-                    if (node.children) {
+                    if (node.children.length !== 0) {
                         node.children.forEach(child => traverse(child));
                     }
                 }
