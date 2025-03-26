@@ -7,3 +7,23 @@
     width: 100%;
     height: 100%;
 }
+
+button.trial-button{
+    background-color:  white;
+    font-size: 2vh;
+    border-width: 3px;
+    border-radius: 5px;
+    
+}
+button.trial-button:hover{
+    background-color: lightsteelblue;
+}
+
+button.trial-button:disabled {
+    background-color: white;
+    cursor: not-allowed;
+  }
+  
+  button:disabled:hover {
+    background-color: white; /* Prevents hover effect */
+  }

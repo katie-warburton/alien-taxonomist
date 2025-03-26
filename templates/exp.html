@@ -5,10 +5,13 @@
 {% block extra_head %}
     <script src="{{url_for('static', filename='jsPsychCurrent/jspsych.js')}}" type="text/javascript"></script>
     <script src="{{url_for('static', filename='jsPsychCurrent/plugin-html-keyboard-response.js')}}" type="text/javascript"></script>
-    <script src="{{url_for('static', filename='jsPsychCurrent/plugin-image-keyboard-response.js')}}" type="text/javascript"></script>
     <script src="{{url_for('static', filename='jsPsychCurrent/plugin-survey-multi-choice.js')}}" type="text/javascript"></script>
     <script src="{{url_for('static', filename='jsPsychCurrent/plugin-external-html.js')}}" type="text/javascript"></script>
     <script src="{{url_for('static', filename='jsPsychCurrent/adaptive-hierarchy.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='jsPsychCurrent/plugin-survey-multi-choice.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='jsPsychCurrent/plugin-html-button-response.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='jsPsychCurrent/plugin-preload.js')}}" type="text/javascript"></script>
+    
     <!-- add d3 -->
     <script src="{{url_for('static', filename='js/d3.v6.min.js')}}" type="text/javascript"></script>
 
@@ -52,14 +55,15 @@
         // it'll send you through to another page before you have a chance to 
         // look at the data  
         //
-        jsPsych.data.displayData();
+        // jsPsych.data.displayData();
+
 
         // To save your data you would uncomment the 
         // code below 
         // 
-        //var all_data = jsPsych.data.get().json();
-        //_send_task_data(all_data);
-        //send_debrief();
+        var all_data = jsPsych.data.get().json();
+        _send_task_data(all_data);
+        send_debrief();
       },
       default_iti: 250
     });
@@ -153,6 +157,68 @@
       return false;
     };
 
+    var get_tree = function(depth) {
+        if(depth == 2) {
+            trees = load_json_file("{{url_for('static', filename='taxonomies/tree2D.json')}}");
+            idx = Math.floor(Math.random() * trees.length);
+            return trees[idx]
+
+        } else if(depth == 3) {
+            trees = load_json_file("{{url_for('static', filename='taxonomies/tree3D.json')}}");
+            idx = Math.floor(Math.random() * trees.length);
+            return trees[idx]
+        }
+    }
+
+    // var shift_items = function(loc, items, shift) {
+    //     if (loc === 'L') {
+    //         return items.map(i=>i-shift)
+    //     } else if (loc === 'R') {
+    //         return items.map(i=>i+shift) 
+    //     } else {
+    //         return items
+    //     }
+    // }
+
+    var get_trials = function(exp_data) {
+        let trials = []
+        for (let i = 0; i < expt_data.trials.length; i++) {
+            var [depth, loc, ord] = expt_data.trials[i];
+            var path = `static/${expt_data.stimuli[i]}/`; 
+            // var trial_items = shift_items(loc, expt_data.orders[ord], expt_data.shift)
+            var code = `${depth}${loc}${ord}`;
+            var trial_items = expt_data.orders[code];
+            var trial_data = {
+                type: jsPsychAdaptiveHierarchy,
+                item_loc: path,
+                item_prompt: "Here is an alien. Please add it to one of the categories at the bottom.",
+                start_tree: get_tree(depth),
+                depth: depth, 
+                title: `Alien Group ${expt_data.names[i]}`,
+                start_prompt: "Here is a partially completed taxonomy for a group of aliens. Recall, your task is to add the new aliens into the categories you think they belong to. Click 'Begin Categorizing' when you are ready to start.",
+                // will  need to fix this!!
+                button_label: 'Begin Categorizing',
+                items: trial_items,
+                data: {'part': 'experiment', 'condition': code}
+            }
+            trials.push(trial_data);
+
+            if (i+1 < expt_data.trials.length) {
+                between_prompt = `You've finished categorizing alien group <i>${expt_data.names[i]}</i>. Press any key to continue to the next group.`;
+            } else {
+                between_prompt = `You've finished categorizing alien group <i>${expt_data.names[i]}</i>. That was the last group! Press any key to complete the experiment.`;
+            }
+
+            var between_screen = {
+                type: jsPsychHtmlKeyboardResponse,
+                stimulus: between_prompt
+
+            }
+            trials.push(between_screen);
+        }
+        return trials
+    }
+
     /* create timeline */
     var timeline = [];
 
@@ -166,76 +232,104 @@
     timeline.push(welcome_block);
 
 
-    // var plain_language_statement = {
-    // type: jsPsychExternalHtml,
-    // url: "{{url_for('static', filename='html/plain-language-statement.html')}}",
-    // cont_btn: "next",
-    // data: {'part': 'statement'}
-    // };
+    var plain_language_statement = {
+        type: jsPsychExternalHtml,
+        url: "{{url_for('static', filename='html/plain-language-statement.html')}}",
+        cont_btn: "next",
+        data: {'part': 'pls'}
+    };
 
-    // timeline.push(plain_language_statement);
+    timeline.push(plain_language_statement);
 
-    // // Consent
-    // var consent = {
-    // type: jsPsychExternalHtml,
-    // url: "{{url_for('static', filename='html/consent.html')}}",
-    // cont_btn: "next",
-    // check_fn: check_consent,
-    // data: {'part': 'consent'},
-    // on_finish:function(){
-    //         if(_rep===1&&_rep_on_consent===1){
-    //             _mark_rep_as_done();
-    //         }
-    // }
-    // };
-    // timeline.push(consent);
+    // Consent
+    var consent = {
+        type: jsPsychExternalHtml,
+        url: "{{url_for('static', filename='html/consent.html')}}",
+        cont_btn: "next",
+        check_fn: check_consent,
+        data: {'part': 'consent'},
+        on_finish:function(){
+                if(_rep===1&&_rep_on_consent===1){
+                    _mark_rep_as_done();
+                }
+        }
+    };
+    timeline.push(consent);
 
     // If you want to keep the PLS and consent code, 
     // Then your code will probably start here.
 
-
     // declare the block.
-    var trial = {
+    var instructions = {
         type: jsPsychExternalHtml,
         url: "{{url_for('static', filename='html/instructions.html')}}",
         cont_btn: "read_instructions",
         data: {'part': 'instructions'}
     };
 
-    timeline.push(trial);
-
-    var orderedSort = {
-        type: jsPsychAdaptiveHierarchy,
-        start_tree: load_json_file("{{url_for('static', filename='taxonomies/tree3D.json')}}"),
-        depth: 3, 
-        start_prompt: "Here is an existing alien taxonomy. Your task is to add the new items into the categories you think they belong to. Click next when you are ready to start.",
-        item_prompt: "Here is an alien. Please add it to one of the categories at the bottom.",
-        items: ["{{url_for('static', filename='stimuli/Set 1/item (13).png')}}",
-                "{{url_for('static', filename='stimuli/Set 1/item (21).png')}}",
-                "{{url_for('static', filename='stimuli/Set 1/item (17).png')}}",
-                "{{url_for('static', filename='stimuli/Set 1/item (15).png')}}",
-                "{{url_for('static', filename='stimuli/Set 1/item (14).png')}}",
-                "{{url_for('static', filename='stimuli/Set 1/item (16).png')}}",
-                "{{url_for('static', filename='stimuli/Set 1/item (1).png')}}",
-                "{{url_for('static', filename='stimuli/Set 1/item (17).png')}}",
-                "{{url_for('static', filename='stimuli/Set 1/item (18).png')}}",
-                "{{url_for('static', filename='stimuli/Set 1/item (32).png')}}",
-                "{{url_for('static', filename='stimuli/Set 1/item (20).png')}}",
-                "{{url_for('static', filename='stimuli/Set 1/item (19).png')}}"]
-                ,
-
-        data: {'part': 'experiment'}
+    var sanityCheck = {
+        type: jsPsychSurveyMultiChoice,
+        questions: [
+            {
+                prompt: "You can add items to any level of the taxonomy",
+                name: 'q1',
+                options: ['True', 'False'],
+                required: true
+            },
+            {
+                prompt: "I can add all items to the same category",
+                name: 'q2',
+                options: ['True', 'False'],
+                required: true
+            }
+        ],
+        preamble: '<h3 style="text-align: left;">UNDERSTANDING CHECK: Please answer the following questions. To proceed you must answer all questions correctly. Otherwise you will be taken back to the start of the tutorial.</h3>',
+        data: {'part': 'sanity-check'},    
+        on_finish: function(data) {
+            var answers = data.response;
+            if (answers.q1 === 'False' && answers.q2 == 'True') {
+                data.pass = true;
+            } else {
+                data.pass = false;
+                data.num_correct = Number(answers.q1 === 'False') + Number( answers.q2 == 'True')
+            }
+        }
     }
-    timeline.push(orderedSort);
-    
 
+    var feedback = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: function(){
+            var pass_to_exp = jsPsych.data.getLastTrialData().values()[0].pass; 
+            if (pass_to_exp) {
+                return "<h3> 2/2 </h3>" +
+                 "<p align='center'>All correct! Press any key to begin classifying aliens.</p>"
+            } else{
+                var num_correct = jsPsych.data.getLastTrialData().values()[0].num_correct;
+                return  `<h3> ${num_correct}/2 </h3>`+
+                "<p align='center'> Some answers are incorrect. Press any key to return to return to the start of the instructions. Please pay attention to the information provided.</p>"
+            }
 
+        },
+        data: {'part': 'sanity-feedback'}
+    }
 
+    var practice_loop = {
+        timeline: [instructions, sanityCheck, feedback],
+        loop_function: function(data) {
+            if (data.values()[1].pass == true) { 
+                return false; 
+            } else { 
+                return true;
+           }
+        },
+        data: {'part': 'practice'}
+    }
 
-    /* Setup study documents and the comprehension questions */
+    timeline.push(practice_loop);
 
-    
-
+    timeline.push({
+        timeline: get_trials(),
+    });
     /* start the experiment */
     jsPsych.run(timeline);	
   </script>

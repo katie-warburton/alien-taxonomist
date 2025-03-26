@@ -36,6 +36,7 @@ expt_uid = config.EXPT_UID
 assignment_file = 'participant-assignments.json'
 conditions_file = 'conditions.json'
 stimuli_paths_file = 'stimuli-data.json'
+params_file = 'condition-params.json'
 
 
 # Using Expt to fetch stimulus data from S3
@@ -97,9 +98,30 @@ def get_data(opts):
     cond = opts['condition']
     trial_set = fetch_trials(cond)
     trial_codes = fetch_codes(trial_set)
-    stimuli_paths = fetch_stimuli()
-    return {'trials': trial_codes, 'stimuli': stimuli_paths}
+    stimuli_paths, species_names = fetch_stimuli()
+    orders, shift, distractors = fetch_params()
+    item_sets = get_item_sets(trial_codes, orders, shift, distractors)
+    return {'trials': trial_codes, 'stimuli': stimuli_paths, 'names': species_names, 'orders': item_sets}
     
+
+def get_item_sets(trials, orders, shift, distractors):
+    item_sets = {}
+    for d, l, o in trials:
+        items = orders[o]
+        if l == 'L':
+            items = [i-shift for i in items]
+        elif l == 'R':
+            items = [i+shift for i in items]
+        if o == 'F':
+            items = items[0:1] + distractors[0:1] + items[1:4] + distractors[1:2] + items[4:5] + distractors[2:3] + items[5:8] + distractors[3:4] + items[8:9]
+        elif o == 'B':
+            items = items[0:1] + distractors[3:4] + items[1:4] + distractors[2:3] + items[4:5] + distractors[1:2] + items[5:8] + distractors[0:1] + items[8:9]
+        else:
+            items = items[0:1] + distractors[3:4] + items[1:4] + distractors[0:1] + items[4:5] + distractors[2:3] + items[5:8] + distractors[1:2] + items[8:9]
+        code = f'{d}{l}{o}'
+        item_sets[code] = items
+    return item_sets
+
 def fetch_trials(cond):
     assignments = me_expt.get_file(assignment_file)
     trial_set = assignments[cond]
@@ -107,10 +129,18 @@ def fetch_trials(cond):
     
 def fetch_codes(trial_set):
     conditions = me_expt.get_file(conditions_file)
-    return [conditions[str(i)] for i in trial_set]
+    current_conds = [tuple(conditions[str(i)]) for i in trial_set]
+    random.shuffle(current_conds)
+    return [(int(d), l, o) for d,l,o in current_conds]
 
 def fetch_stimuli():
-    sets = me_expt.get_file(stimuli_paths_file)['paths']
+    stimuli_data = me_expt.get_file(stimuli_paths_file)
+    sets = stimuli_data['paths']
+    names = stimuli_data['names']
     random.shuffle(sets)
-    return sets
+    random.shuffle(names)
+    return sets, names
 
+def fetch_params():
+    param_data = me_expt.get_file(params_file)
+    return param_data['orders'], param_data['shift'], param_data['distractors']

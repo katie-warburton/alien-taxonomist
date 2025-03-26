@@ -16,9 +16,14 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                 array: true,
                 description: 'The list of items to be categorized.'
             },
+            item_loc: {
+                type: jspsych.ParameterType.STRING,
+                default: void 0, 
+                description: 'The folder that contains the stimuli used for the task'
+            },
             title: {
                 type: jspsych.ParameterType.HTML_STRING,
-                default: "Alien Group 1",
+                default: "Alien Organisms",
                 description: "The title of the task."
             },
             depth: {
@@ -56,11 +61,6 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                 type: jspsych.ParameterType.STRING,
                 default: "white",
                 description: "The background color of the nodes."
-            },
-            node_hover_color: {
-                type: jspsych.ParameterType.STRING,
-                default: "pink",
-                description: "The color of the nodes when they are hovered over."
             },
             node_border_width: {
                 type: jspsych.ParameterType.INT,
@@ -116,6 +116,7 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
             let style = document.createElement('style');
             style.innerHTML = css;
             document.head.appendChild(style);
+            console.log(trial.items, trial.data.condition);
 
             // Define the base HTML for the trial
             let html = '';
@@ -132,7 +133,7 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
             html += '<svg id="category-tree" style="grid-row: 6;  grid-column: 2 / span 3;  width:100%; height:100%; border:3px solid black; background-color:'+trial.background_color+';">'
             html += '</svg>';
             html += '<div id="button-container" style="grid-row: 8; grid-column: 2 / span 3; text-align: center; display:flex; align-items: center; justify-content: center; height: 100%; width: 100%;">';
-            html += '<button id="continue-button">'+trial.button_label+'</button>';
+            html += '<button class="trial-button" id="continue-button" style="font-size:1.75vh;">'+trial.button_label+'</button>';
             html += '</div>';
             html +='</div>';
             display_element.innerHTML = html;
@@ -257,14 +258,14 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
             }
 
             function redraw_node(rect, node, d) {
-                console.log(d);
                 d.data.items.push(trial.items[current_item]);
                 let loc = d.data.items.length - 1;
                 let x = trial.node_border_width + ((loc % d.data.cols) * d.data.item_size);
                 let y = trial.node_border_width + (Math.floor(loc / d.data.cols) * d.data.item_size);
 
+                let item_path =  trial.item_loc + "\item (" + trial.items[current_item] + ").png";
                 node.append("image")
-                .attr("xlink:href", trial.items[current_item])
+                .attr("xlink:href", item_path)
                 .attr("x", x)
                 .attr("y", y)
                 .attr("width", d.data.item_size)
@@ -357,11 +358,14 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                 .style("cursor", d => d.data.depth == trial.depth-1 ? "pointer" : "default")
                 .on("mouseover", function() {
                     if (d.data.depth == trial.depth-1 ){
-                        d3.select(this).attr("fill", trial.node_hover_color);
+                        d3.select(this).attr("stroke", "red");
+                        d3.select(this).attr("stroke-width", trial.node_border_width*2);
+
                     }
                 })
                 .on("mouseout", function() {
-                    d3.select(this).attr("fill", trial.node_background_color);
+                    d3.select(this).attr("stroke", "black");
+                    d3.select(this).attr("stroke-width", trial.node_border_width);
                 })
                 .on("click", function() {
                     if (d.data.depth == trial.depth-1 && BUILD_MODE && ITEM_LOC === null) {
@@ -435,11 +439,11 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                     for (let col = 0; col < d.data.cols; col++) {
                         if (i < d.data.items.length) {
                             let item = d.data.items[i];
+                            let item_path =  trial.item_loc + "\item (" + item + ").png";
                             let x = trial.node_border_width + (col * d.data.item_size);
                             let y = trial.node_border_width + (row * d.data.item_size);
-                            console.log(item);
                             node.append("image")
-                            .attr("xlink:href", item)
+                            .attr("xlink:href", item_path)
                             .attr("x", x)
                             .attr("y", y)
                             .attr("width", d.data.item_size)
@@ -575,7 +579,6 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                         ITEM_LOC = d.data.name;
                     }
                 });
-    
             }
 
 
@@ -636,7 +639,7 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                     let item_display = document.getElementById("item-display");
                     item_display.innerHTML = '';
                     const image_element = document.createElement('img');
-                    image_element.src = trial.items[index];
+                    image_element.src = trial.item_loc + "\item (" + trial.items[index] + ").png";
                     image_element.id = `stimuli-${index}`;
                     let size = Math.min(item_display.clientWidth, item_display.clientHeight);
                     image_element.width = size;
@@ -647,7 +650,9 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                     });
                     BUILD_MODE = true;
                     NEXT_BUTTON.disabled = true;
+                    NEXT_BUTTON.textContent = 'Next Item';
                 } else {
+                    BUILD_MODE = false;
                     for (let node of nodes) {
                         // ensures that the final tree does not have any circular references
                         delete node.data.parent;
@@ -660,9 +665,7 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                         rt: end_time - START_TIME,
                         final_tree: final_tree
                     };
-
                     jsPsych.finishTrial(data);
-
                 }   
             }
 
@@ -673,9 +676,18 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                 ITEM_LOC = null;
                 showElement(current_item);
             });
-        }
-        
 
+            // NEXT_BUTTON.addEventListener("mouseover", function(event) {
+            //     event.target.style.backgroundColor = "LightGray";
+
+
+            // });
+            // NEXT_BUTTON.addEventListener("mouseout", function(event) {
+            //     event.target.style.backgroundColor = "white";
+            //     event.target.style.fontWeight = "normal";
+
+            // })
+        }
     }
     AdaptiveHierarchy.info = info;
     return AdaptiveHierarchy;
