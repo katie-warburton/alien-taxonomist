@@ -10,7 +10,7 @@ RESULTS_DIR="2025/AlienTaxonomist/results"
 PROLIFIC_COMPLETION_CODE = None
 
 # Restrict device on AWS
-RESTRICTIONS = ["IE", "mobile", "tablet", "tv"]
+RESTRICTIONS = ["mobile", "tablet", "tv"]
 
 # AWS Settings
 AWS_DEFAULT_REGION = 'us-west-2'

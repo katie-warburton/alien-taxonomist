@@ -17,13 +17,19 @@ button.trial-button{
 }
 button.trial-button:hover{
     background-color: lightsteelblue;
+    cursor: pointer;
 }
 
 button.trial-button:disabled {
     background-color: white;
-    cursor: not-allowed;
+    cursor: default;
   }
   
   button:disabled:hover {
-    background-color: white; /* Prevents hover effect */
+    background-color: white;
   }
+
+  #prompt-container p {
+    margin: 0;
+    padding: 0;
+}
