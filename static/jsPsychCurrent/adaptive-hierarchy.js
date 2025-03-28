@@ -31,26 +31,17 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                 default: void 0,
                 description: "The level at which items are added to the graph."
             },
-            start_prompt: {
+            prompts: {
                 type: jspsych.ParameterType.HTML_STRING,
-                default: `Here is the taxonomy. You can right click on the categories to zoom in and out. The nodes you can place items in will turn pink when you hover over them.
-                Once you are familiar with the taxonomy click next to start categorizing items.`,
-                description: "The prompts to display to participants at the start."
+                default: [],
+                array: true, 
+                description: "The prompts to display to participants as they complete the trial."
             },
-            item_prompt: {
-                type: jspsych.ParameterType.HTML_STRING,
-                default: "Here is an item. Please place it in one of the categories. The categories you can place it in will turn pink when you hover over them. Once you have placed the item click next to proceed." ,
-                description: "The prompts to display to participants with each item."
-            },
-            end_prompt: {
-                type: jspsych.ParameterType.HTML_STRING,
-                default: "You have finished this taxonomy. Press any key to proceed.",
-                description: "The prompts to display to participants at the end."
-            },
-            button_label: {
+            button_labels: {
                 type: jspsych.ParameterType.STRING,
-                default: "Next",
-                description: "The text that appears on the button to proceed to the next item."
+                default: [],
+                array: true,
+                description: 'The text that will appear on the next button during the experiment.'
             },
             background_color: {
                 type: jspsych.ParameterType.STRING,
@@ -77,6 +68,15 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                 default: 0.09,
                 description: "The minimum gap size between nodes (calculated as a proportion of the total space)."
             },
+            practice_mode: {
+                type: jspsych.ParameterType.BOOL,
+                default: false,
+                description: "Sets the mode of the module (practice = true and experiment = false)."
+            },
+            disable_new_cat: {
+                type: jspsych.ParameterType.BOOL,
+                default: false
+            }
         },
         data: {
             rt: {
@@ -120,20 +120,20 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
 
             // Define the base HTML for the trial
             let html = '';
-            html += '<div class ="jspsych-display-element" style="display: grid; grid-template-columns: 6fr 79fr 1fr 8fr 6fr; grid-template-rows: 2fr 6fr 1fr 8fr 2fr 73fr 1fr 5fr 2fr; height: 96vh; width: 96vw; margin: auto; padding: 0;">';
+            html += '<div class ="jspsych-display-element" style="display: grid; grid-template-columns: 6fr 79fr 1fr 8fr 6fr; grid-template-rows: 2fr 5fr 1fr 10fr 2fr 73fr 1fr 5fr 2fr; height: 96vh; width: 96vw; margin: auto; padding: 0;">';
             html += '<div id="title-container" style="grid-row: 2; grid-column: 2; text-align: left; display:flex; align-items: center; height: 100%; width: 100%;">';
             html += '<div style="font-size: 5vh;">'+trial.title+"</div>";
             html += '</div>';
             html += '<div id="item-display" style="grid-row: 2 / span 3; grid-column: 4; text-align: center; display:flex; align-items: center; justify-content: center; border: 3px solid black; width: 100%; height: 100%;">';
             
             html += '</div>';
-            html += '<div id="prompt-container" style="grid-row: 4; grid-column: 2; text-align: left; display:flex; align-items: top; height: 100%; width: 100%; overflow: auto;">';
-            html += '<div style="font-size: 2.75vh;">' + trial.start_prompt + '</div>';
+            html += '<div id="prompt-container" style="grid-row: 4; grid-column: 2; text-align: left; display:flex; align-items: top; height: 100%; width: 100%; overflow: auto; font-size: 18px;">';
+            html +=  trial.prompts[0];
             html += '</div>';
             html += '<svg id="category-tree" style="grid-row: 6;  grid-column: 2 / span 3;  width:100%; height:100%; border:3px solid black; background-color:'+trial.background_color+';">'
             html += '</svg>';
             html += '<div id="button-container" style="grid-row: 8; grid-column: 2 / span 3; text-align: center; display:flex; align-items: center; justify-content: center; height: 100%; width: 100%;">';
-            html += '<button class="trial-button" id="continue-button" style="font-size:1.75vh;">'+trial.button_label+'</button>';
+            html += '<button class="trial-button" id="continue-button" style="font-size:1.75vh;">'+trial.button_labels[0]+'</button>';
             html += '</div>';
             html +='</div>';
             display_element.innerHTML = html;
@@ -370,7 +370,7 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                 .on("click", function() {
                     if (d.data.depth == trial.depth-1 && BUILD_MODE && ITEM_LOC === null) {
                         // redefine width and height of node
-                        let rect = d3.select(this);
+                        let rect = d3.select(this)
                         redraw_node(rect, node, d);
 
                         // Update parent nodes and visual elements
@@ -484,17 +484,26 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                 // add background to text
                 // add border to text
                 .attr("visibility", d => !d.data.visible ? "visible" : "hidden")
-                .style("cursor", "pointer")
+                .style("cursor", function(){
+                    if (trial.disable_new_cat) {
+                        return "default"
+                    } else {
+                        return "pointer"
+                    }
+                })
                 .on("mouseover", function() {
-                    d3.select(this).attr("fill", "red");
-                
+                    if (!trial.disable_new_cat) {
+                        d3.select(this).attr("fill", "red");
+                    }
                 })
                 .on("mouseout", function() {
                     d3.select(this).attr("fill", "black");
                 })
                 .on("click", function() {
                     // make text invisible
-                    if (BUILD_MODE && ITEM_LOC === null) {
+                    if (trial.disable_new_cat) {
+
+                    } else if (BUILD_MODE && ITEM_LOC === null) {
                         let text = d3.select(this);
                         text.attr("visibility", "hidden");
                         d.data.visible = true;
@@ -630,12 +639,33 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
             .attr("visibility", d => d.source.data.visible && d.target.data.visible ? "visible" : "hidden")
             .lower();
 
+
+            function clearItems(node) {
+                if (node.children.length !== 0) {
+                    node.items = [];
+                }
+                delete node.depth;
+                delete node.width;
+                delete node.item_size;
+                delete node.height;
+                delete node.max_height;
+                delete node.max_width;
+                delete node.cols;
+                delete node.rows;
+                delete node.max_x;
+                delete node.center_x;
+                delete node.min_x;
+                delete node.y; 
+                node.children.forEach(child => {
+                    clearItems(child);
+                });
+            }
+
             function showElement(index) {
                 if (index === -1) {
                         
                 } else if (index < trial.items.length) {
-                    let prompt = document.getElementById("prompt-container");
-                    prompt.innerHTML = '<div style="font-size: 2.75vh;">' + trial.item_prompt + '</div>';
+                    
                     let item_display = document.getElementById("item-display");
                     item_display.innerHTML = '';
                     const image_element = document.createElement('img');
@@ -648,19 +678,28 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                     image_element.addEventListener('load', () => {
                         item_display.appendChild(image_element);
                     });
-                    BUILD_MODE = true;
+                    let prompt = document.getElementById("prompt-container");
+                    if (index < trial.prompts.length-1) {
+                        prompt.innerHTML = trial.prompts[index+1];
+                        NEXT_BUTTON.textContent = trial.button_labels[index+1];
+                    } else {
+                        prompt.innerHTML = '';
+                    }
+                    NEXT_BUTTON.textContent = trial.button_labels[index+1];
                     NEXT_BUTTON.disabled = true;
-                    NEXT_BUTTON.textContent = 'Next Item';
+                    BUILD_MODE = true;
                 } else {
                     BUILD_MODE = false;
+                    // ensures that the final tree does not have any circular references
                     for (let node of nodes) {
-                        // ensures that the final tree does not have any circular references
                         delete node.data.parent;
 
                     }
                     let end_time = performance.now();
 
                     let final_tree = root.data;
+                    clearItems(final_tree);
+
                     let data = {
                         rt: end_time - START_TIME,
                         final_tree: final_tree
@@ -674,19 +713,9 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
             NEXT_BUTTON.addEventListener("click", function() {
                 current_item++;
                 ITEM_LOC = null;
+                
                 showElement(current_item);
             });
-
-            // NEXT_BUTTON.addEventListener("mouseover", function(event) {
-            //     event.target.style.backgroundColor = "LightGray";
-
-
-            // });
-            // NEXT_BUTTON.addEventListener("mouseout", function(event) {
-            //     event.target.style.backgroundColor = "white";
-            //     event.target.style.fontWeight = "normal";
-
-            // })
         }
     }
     AdaptiveHierarchy.info = info;

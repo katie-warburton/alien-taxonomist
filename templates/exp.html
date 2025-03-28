@@ -170,15 +170,16 @@
         }
     }
 
-    // var shift_items = function(loc, items, shift) {
-    //     if (loc === 'L') {
-    //         return items.map(i=>i-shift)
-    //     } else if (loc === 'R') {
-    //         return items.map(i=>i+shift) 
-    //     } else {
-    //         return items
-    //     }
-    // }
+    var get_tree_practice = function(depth) {
+        if(depth == 2) {
+            trees = load_json_file("{{url_for('static', filename='taxonomies/tree2D.json')}}");
+            return trees[0]
+
+        } else if(depth == 3) {
+            trees = load_json_file("{{url_for('static', filename='taxonomies/tree3D.json')}}");
+            return trees[0]
+        }
+    }
 
     var get_trials = function(exp_data) {
         let trials = []
@@ -188,16 +189,27 @@
             // var trial_items = shift_items(loc, expt_data.orders[ord], expt_data.shift)
             var code = `${depth}${loc}${ord}`;
             var trial_items = expt_data.orders[code];
+            if (i === 0) {
+                first_prompt = "Here is a partially completed taxonomy for a group of aliens. Recall, your task is to add the new aliens into the categories you think they belong to. Categories you can add aliens to will turn red when you hover over them. You can also add a category by clicking add category if you think it is needed. Please familiarize yourself with the taxonomy and then click 'Begin Categorizing' when you are ready to start.";
+            } else {
+                first_prompt = "Here is another partially completed taxonomy for a different group of aliens. Familiarize yourself with the taxonomy and click 'Begin Categorizing' when you are ready to start.";
+
+            }
+
+            let button_labels = ['Begin Categorizing']
+            for(j=0; j<trial_items.length-1; j++) {
+                button_labels.push('Next Alien');
+            }
+            button_labels.push('Finish');
+            var item_prompt = "Here is the first alien. Please add it to one of the categories at the bottom. When you are satisfied with its placement click 'Next Alien' to continue.";
             var trial_data = {
                 type: jsPsychAdaptiveHierarchy,
                 item_loc: path,
-                item_prompt: "Here is an alien. Please add it to one of the categories at the bottom.",
                 start_tree: get_tree(depth),
                 depth: depth, 
                 title: `Alien Group ${expt_data.names[i]}`,
-                start_prompt: "Here is a partially completed taxonomy for a group of aliens. Recall, your task is to add the new aliens into the categories you think they belong to. Click 'Begin Categorizing' when you are ready to start.",
-                // will  need to fix this!!
-                button_label: 'Begin Categorizing',
+                prompts: [first_prompt, item_prompt],
+                button_labels: button_labels,
                 items: trial_items,
                 data: {'part': 'experiment', 'condition': code}
             }
@@ -216,6 +228,7 @@
             }
             trials.push(between_screen);
         }
+        console.log(trials.length);
         return trials
     }
 
@@ -271,15 +284,33 @@
         type: jsPsychSurveyMultiChoice,
         questions: [
             {
-                prompt: "You can add items to any level of the taxonomy",
+                prompt: "I can add aliens to ANY level of the taxonomy.",
                 name: 'q1',
-                options: ['True', 'False'],
+                options: jsPsych.randomization.shuffle(['True', 'False']),
                 required: true
             },
             {
-                prompt: "I can add all items to the same category",
+                prompt: "I can add all NEW aliens to the same category.",
                 name: 'q2',
-                options: ['True', 'False'],
+                options: jsPsych.randomization.shuffle(['True', 'False']),
+                required: true
+            },
+            {
+                prompt: "I can create a new category if I feel like the existing categories aren't appropriate for the new alien I'm adding to the taxonomy.",
+                name: 'q3',
+                options: jsPsych.randomization.shuffle(['True', 'False']),
+                required: true
+            },
+            {
+                prompt: "When hovering over a category that you can add items too it's border changes colour. What colour does its border change too?",
+                name: 'q4',
+                options: jsPsych.randomization.shuffle(['Green', 'Yellow', 'Red', 'Orange']),
+                required: true
+            },
+            {
+                prompt: "I MUST create a new category for all new alien's being added to the taxonomy.",
+                name: 'q5',
+                options: jsPsych.randomization.shuffle(['True', 'False']),
                 required: true
             }
         ],
@@ -287,11 +318,12 @@
         data: {'part': 'sanity-check'},    
         on_finish: function(data) {
             var answers = data.response;
-            if (answers.q1 === 'False' && answers.q2 == 'True') {
+            if (answers.q1 === 'False' && answers.q2 === 'True' && answers.q3 === 'True' && answers.q4 === 'Red' && answers.q5 === 'False') {
                 data.pass = true;
+                data.num_correct = 5;
             } else {
                 data.pass = false;
-                data.num_correct = Number(answers.q1 === 'False') + Number( answers.q2 == 'True')
+                data.num_correct = Number(answers.q1 === 'False') + Number( answers.q2 === 'True') +  Number(answers.q3 === 'True') + Number(answers.q4 === 'Red') + Number(answers.q5 === 'False');
             }
         }
     }
@@ -300,12 +332,14 @@
         type: jsPsychHtmlKeyboardResponse,
         stimulus: function(){
             var pass_to_exp = jsPsych.data.getLastTrialData().values()[0].pass; 
+            var num_correct = jsPsych.data.getLastTrialData().values()[0].num_correct;
+            console.log(pass_to_exp)
+            var html_str = `<h3> ${num_correct}/5 </h3>`;
             if (pass_to_exp) {
-                return "<h3> 2/2 </h3>" +
+                return html_str +
                  "<p align='center'>All correct! Press any key to begin classifying aliens.</p>"
             } else{
-                var num_correct = jsPsych.data.getLastTrialData().values()[0].num_correct;
-                return  `<h3> ${num_correct}/2 </h3>`+
+                return  html_str +
                 "<p align='center'> Some answers are incorrect. Press any key to return to return to the start of the instructions. Please pay attention to the information provided.</p>"
             }
 
@@ -313,10 +347,81 @@
         data: {'part': 'sanity-feedback'}
     }
 
+
+    var tutorial_1 = {
+        type: jsPsychAdaptiveHierarchy,
+        item_loc: "{{url_for('static', filename='stimuli/Practice 1/')}}",
+        start_tree: get_tree_practice(2),
+        depth: 2,
+        title: 'Practice Taxonomy 1',
+        prompts: [
+            "<p>Here is an example of a partially completed taxonomy. It has <u>2 levels of categorization</u>. Now imagine that the circles are aliens. Our scientists are already convinced that all the items you will see belong to the top category. However they still need to sort them into the bottom categories. This is where you will come in. You must sort each new alien into the bottom level category that you believe it belongs to. Press 'Begin Categorizing' to start the tutorial.</p>",
+
+            "<p>Here is a new alien! To keep things simple, the borders of categories you can add items to will turn <u>red</u> when you hover over them. To familiarize yourself with the set up, try hovering over all the categories in the tree. Notice which ones turn red. Then <u>click</u> on the category you want to add the alien to. In this round, please add it to the category with the other red circles to demonstrate your understanding. Once you are done click 'Next Alien'.</p>",
+
+            "<p>Once you have clicked 'Next Alien', you cannot move the alien from the previous trial. However, you will be given another alien to add to the taxonomy. You cannot move on until you add this alien into the taxonomy so please add it and then click 'Next Alien' again.</p>",
+
+            "<p>This is the final alien. Please add it to the taxonomy and then click 'Finish'.</p>"
+
+        ],
+        button_labels: ['Begin Categorizing', 'Next Alien', 'Next Alien', 'Finish'],
+        items: [9, 10, 11],
+        practice_mode: true,
+        disable_new_cat: true, 
+        data: {'part': 'tutorial'}
+    }
+
+    var tutorial_debrief_1 = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: "<div><p style='font-size: 20px;'>Congratulations! You've completed the first stage of the tutorial. Notice how all the circles you were shown were red and belonged to the same category. That is totally fine. The categories do not have to be equally sized, nor does every category have to be used.</p> <p>Press any key to move on to the next stage.</p></div>",
+        data: {'part': 'tutorial-debrief'}
+    }
+
+    var tutorial_2 = {
+        type: jsPsychAdaptiveHierarchy,
+        start_tree: function(){
+            var past_tutorials = jsPsych.data.get().filter({trial_type: "hierarchical-categorization"});
+            return past_tutorials.trials[past_tutorials.trials.length-1].final_tree; 
+        },
+        items: [12, 15, 16, 13, 17, 14, 9],
+        depth: 2,
+        title: 'Practice Taxonomy 1',
+        practice_mode: true,
+        disable_new_cat: false, 
+        button_labels: ['Begin Categorizing', 'Next Alien', 'Next Alien', 'Next Alien', 'Finish'],
+        prompts: [
+            "<p>Here is the same taxonomy. It includes the items you've already added to the hierarchy. In this part we will categorize more aliens to explore some other options you have when categorizing. Press 'Begin Categorization' when you are ready to start.</p>",
+
+            "<p>Here is another circle representing a new alien. Unlike in the previous round, this item should be placed into the category with the other yellow circles. Please do so and then click 'Next Alien'.</p>",
+
+            "<p>Now here is another alien. This alien is not red or yellow, it is orange. Hover over the text that says 'New Category' and observe how it turns red. Try clicking this and see how the alien moves from the box to a new category. Then click 'Next alien'.</p>",
+
+            "<p>Here is an alien whose membership might be less clear. Try clicking on the category you think it most fits, however instead of immediately clicking next alien, try moving it between all the categories you can add an item to. Decide which category you think it best matches as then click 'Next Alien'. REMEMBER, once you click next, you can't move the alien anymore. </p>",
+
+            "<p>Here are a few more aliens to categorize to get you familiar with the setting. Keep adding them until you can click 'Finish'</p>",
+
+            "<p>Here are a few more aliens to categorize to get you familiar with the setting. Keep adding them until you can click 'Finish'</p>",
+
+            "<p>Here are a few more aliens to categorize to get you familiar with the setting. Keep adding them until you can click 'Finish'</p>",
+
+            "<p>Here are a few more aliens to categorize to get you familiar with the setting. Keep adding them until you can click 'Finish'</p>",
+
+    ],
+        item_loc: "{{url_for('static', filename='stimuli/Practice 1/')}}",
+        data: {'part': 'tutorial'}
+
+    }
+
+    var tutoria_3 = {
+        type: jsPsychAdaptiveHierarchy,
+
+    }
+
     var practice_loop = {
-        timeline: [instructions, sanityCheck, feedback],
+        timeline: [instructions, tutorial_1, tutorial_debrief_1, tutorial_2, sanityCheck, feedback],
         loop_function: function(data) {
-            if (data.values()[1].pass == true) { 
+            console.log(data);
+            if (data.values()[4p].pass == true) { 
                 return false; 
             } else { 
                 return true;
