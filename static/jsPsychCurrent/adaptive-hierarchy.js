@@ -11,9 +11,9 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                 description: "The starting category system."
             },
             items: {
-                type: jspsych.ParameterType.IMAGE,
+                type: jspsych.ParameterType.ARRAY,
+                arrayType: jspsych.ParameterType.INT,
                 default: [],
-                array: true,
                 description: 'The list of items to be categorized.'
             },
             item_loc: {
@@ -31,16 +31,14 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                 default: void 0,
                 description: "The level at which items are added to the graph."
             },
-            prompts: {
-                type: jspsych.ParameterType.HTML_STRING,
+            prompts: {type: jspsych.ParameterType.ARRAY,
+                arrayType: jspsych.ParameterType.HTML_STRING,
                 default: [],
-                array: true, 
                 description: "The prompts to display to participants as they complete the trial."
             },
-            button_labels: {
-                type: jspsych.ParameterType.STRING,
+            button_labels: {type: jspsych.ParameterType.ARRAY,
+                arrayType: jspsych.ParameterType.STRING,
                 default: [],
-                array: true,
                 description: 'The text that will appear on the next button during the experiment.'
             },
             background_color: {
@@ -68,17 +66,17 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                 default: 0.05,
                 description: "The minimum gap size between nodes (calculated as a proportion of the total space)."
             },
-            practice_mode: {
-                type: jspsych.ParameterType.BOOL,
-                default: false,
-                description: "Sets the mode of the module (practice = true and experiment = false)."
+            start_idx: {
+                type: jspsych.ParameterType.INT,
+                default: -1,
+                description: "How many prompts there are at the start."
             }
         },
         data: {
             rts: {
-                type: jspsych.ParameterType.INT,
+                type: jspsych.ParameterType.ARRAY,
+                arrayType: jspsych.ParameterType.INT,
                 default: [],
-                array: true,
                 description: 'The response time in milliseconds.'
             },
             final_tree: {
@@ -87,10 +85,16 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                 description: 'The final category system that the participant ends the task with.'
             },
             category_choices: {
-                type: jspsych.ParameterType.STRING,
+                type: jspsych.ParameterType.ARRAY,
+                arrayType: jspsych.ParameterType.STRING,
                 default: [],
-                array: true,
                 description: 'The locations a participant placed each new item into the hierarchy.'
+            },
+            category_changes: {
+                type: jspsych.ParameterType.ARRAY,
+                arrayType: jspsych.ParameterType.ARRAY,
+                default: [],
+                description: 'The previous choices before the final category choice.'
             }
         }
     };
@@ -429,13 +433,13 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                             }
                             parent = parent.parent;
                         }
+                        ITEM_CHOICES.push(ITEM_LOC);
                         ITEM_LOC = d.data.name;
                     }
                 })
                 ;
 
                 let i = 0;
-                d.data.items = d.data.items.sort(() => Math.random() - 0.5);
                 for (let row = 0; row < d.data.rows; row++) {
                     for (let col = 0; col < d.data.cols; col++) {
                         if (i < d.data.items.length) {
@@ -477,8 +481,6 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                     return size + "px";
                 })
                 .attr("fill", "black")
-                // add background to text
-                // add border to text
                 .attr("visibility", d => !d.data.visible ? "visible" : "hidden")
                 .style("cursor", "pointer")
                 .on("mouseover", function() {
@@ -522,7 +524,7 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                         ITEM_LOC = d.data.name;
                         NEXT_BUTTON.disabled = false;
 
-                    } else if (BUILD_MODE && ITEM_LOC !== null) {
+                    } else if (BUILD_MODE && ITEM_LOC !== null && ITEM_LOC !== d.data.name) {
                         let text = d3.select(this);
                         text.attr("visibility", "hidden");
                         d.data.visible = true;
@@ -570,7 +572,7 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                             }
                             parent = parent.parent;
                         }
-
+                        ITEM_CHOICES.push(ITEM_LOC);
                         ITEM_LOC = d.data.name;
                     }
                 });
@@ -654,10 +656,17 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
             }
 
             function showElement(index) {
-                if (index === -1) {
-                        
+                if (index < 0) {
+                    let prompt = document.getElementById("prompt-container");
+                    if (index < trial.prompts.length-1) {
+                        prompt.innerHTML = trial.prompts[index+Math.abs(trial.start_idx)];
+                        NEXT_BUTTON.textContent = trial.button_labels[index+Math.abs(trial.start_idx)];
+                    } else {
+                        prompt.innerHTML = '';
+                    }
+                    NEXT_BUTTON.textContent = trial.button_labels[index+Math.abs(trial.start_idx)];
                 } else if (index < trial.items.length) {
-                    
+                    ITEM_CHOICES = [];
                     let item_display = document.getElementById("item-display");
                     item_display.innerHTML = '';
                     const image_element = document.createElement('img');
@@ -670,16 +679,16 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                     image_element.addEventListener('load', () => {
                         item_display.appendChild(image_element);
                     });
+                    BUILD_MODE = true;
                     let prompt = document.getElementById("prompt-container");
                     if (index < trial.prompts.length-1) {
-                        prompt.innerHTML = trial.prompts[index+1];
-                        NEXT_BUTTON.textContent = trial.button_labels[index+1];
+                        prompt.innerHTML = trial.prompts[index+Math.abs(trial.start_idx)];
+                        NEXT_BUTTON.textContent = trial.button_labels[index+Math.abs(trial.start_idx)];
                     } else {
                         prompt.innerHTML = '';
                     }
-                    NEXT_BUTTON.textContent = trial.button_labels[index+1];
+                    NEXT_BUTTON.textContent = trial.button_labels[index+Math.abs(trial.start_idx)];
                     NEXT_BUTTON.disabled = true;
-                    BUILD_MODE = true;
                 } else {
                     BUILD_MODE = false;
                     // ensures that the final tree does not have any circular references
@@ -691,7 +700,8 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                     clearItems(final_tree);
 
                     console.log(REACTION_TIMES);
-                    console.log(CATEGORY_CHOICES)
+                    console.log(CATEGORY_CHOICES);
+                    console.log(CATEGORY_CHANGES);
 
                     let data = {
                         rts: REACTION_TIMES,
@@ -703,15 +713,18 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                 TIME = performance.now();
             }
 
-            let current_item = -1;
+            let current_item = trial.start_idx;
+            let ITEM_CHOICES;
             let REACTION_TIMES = [];
             let CATEGORY_CHOICES = [];
+            let CATEGORY_CHANGES = [];
             let TIME = performance.now();
             let NEXT_BUTTON = document.getElementById("continue-button");
             NEXT_BUTTON.addEventListener("click", function() {
                 REACTION_TIMES.push(performance.now() - TIME);
                 if (current_item > -1 ){
                     CATEGORY_CHOICES.push(ITEM_LOC);
+                    CATEGORY_CHANGES.push(ITEM_CHOICES);
                 }
                 current_item++;
                 ITEM_LOC = null;

@@ -1,0 +1,25 @@
+{
+    "name": "ROOT",
+    "root": true,
+    "visible": true,
+    "children": [
+        {
+            "name": "Chordates",
+            "visible": true,
+            "items": [1, 2, 4, 6],
+            "children": []
+        },
+        {
+            "name": "X",
+            "visible": false,
+            "items": [],
+            "children": []
+        },
+        {
+            "name": "Molluscs",
+            "visible": true,
+            "items": [26, 29, 30],
+            "children": []
+        }
+    ]
+}

@@ -159,25 +159,10 @@
 
     var get_tree = function(depth) {
         if(depth == 2) {
-            trees = load_json_file("{{url_for('static', filename='taxonomies/tree2D.json')}}");
-            idx = Math.floor(Math.random() * trees.length);
-            return trees[idx]
+            return load_json_file("{{url_for('static', filename='taxonomies/tree2D.json')}}");
 
         } else if(depth == 3) {
-            trees = load_json_file("{{url_for('static', filename='taxonomies/tree3D.json')}}");
-            idx = Math.floor(Math.random() * trees.length);
-            return trees[idx]
-        }
-    }
-
-    var get_tree_practice = function(depth) {
-        if(depth == 2) {
-            trees = load_json_file("{{url_for('static', filename='taxonomies/tree2D.json')}}");
-            return trees[0]
-
-        } else if(depth == 3) {
-            trees = load_json_file("{{url_for('static', filename='taxonomies/tree3D.json')}}");
-            return trees[0]
+            return load_json_file("{{url_for('static', filename='taxonomies/tree3D.json')}}");
         }
     }
 
@@ -348,75 +333,67 @@
     }
 
 
+    let practice_2d = load_json_file("{{url_for('static', filename='taxonomies/tree2Dpractice.json')}}");
+    console.log(practice_2d);
     var tutorial_1 = {
         type: jsPsychAdaptiveHierarchy,
         item_loc: "{{url_for('static', filename='stimuli/Practice 1/')}}",
-        start_tree: get_tree_practice(2),
+        start_tree: practice_2d,
         depth: 2,
-        title: 'Practice Taxonomy 1',
+        title: 'Animal Kingdom Part 1',
         prompts: [
-            "<p>Here is an example of a partially completed taxonomy. It has <u>2 levels of categorization</u>. Now imagine that the circles are aliens. Our scientists are already convinced that all the items you will see belong to the top category. However they still need to sort them into the bottom categories. This is where you will come in. You must sort each new alien into the bottom level category that you believe it belongs to. Press 'Begin Categorizing' to start the tutorial.</p>",
+            "<p>Here is an example of a partially completed taxonomy. This taxonomy has <u>2 levels of categorization</u> and represents a portion of the <i>Taxonomy of Living Things</i>. The top level represents the category that accounts for all the things you will see (in this case animals). The bottom level represents two sub-divisions of this category. Click 'Next' to continue.</p>",
 
-            "<p>Here is a new alien! To keep things simple, the borders of categories you can add items to will turn <u>red</u> when you hover over them. To familiarize yourself with the set up, try hovering over all the categories in the tree. Notice which ones turn red. Then <u>click</u> on the category you want to add the alien to. In this round, please add it to the category with the other red circles to demonstrate your understanding. Once you are done click 'Next Alien'.</p>",
+            "<p>You can only add animals to categories at the bottom of this taxonomy. The borders of categories you can add to will turn <u>red</u> when hovered over. To familiarize yourself with the set up, try hovering over all the categories in the tree. Notice which ones turn red. Once you are comfortable with the setup click 'Begin Categorizing'.</p>",
 
-            "<p>Once you have clicked 'Next Alien', you cannot move the alien from the previous trial. However, you will be given another alien to add to the taxonomy. You cannot move on until you add this alien into the taxonomy so please add it and then click 'Next Alien' again.</p>",
+            "<p>Here is a dog. <u>Click</u> on the category you want to add the dog to. Once you are done click 'Next Animal'.</p>",
 
-            "<p>This is the final alien. Please add it to the taxonomy and then click 'Finish'.</p>"
+            "<p>Now that you have clicked 'Next Animal', you cannot move the dog. Instead, you have a new animal to categorize. This is a sparrow. Again, add it to the category it belongs to and click 'Next Animal'.</p>",
 
+            "<p>Here is a goose! Add it to the taxonomy and click 'Next Animal'.</p>",
+
+            "<p>Finally, here is a kangaroo. This is the last animal you have to add. Notice that when you add it to a category at the bottom, it is also added to the top level category (a.k.a. the parent category). When you have added it to the taxonomy click 'Finish'.</p>"
         ],
-        button_labels: ['Begin Categorizing', 'Next Alien', 'Next Alien', 'Finish'],
-        items: [9, 10, 11],
-        practice_mode: true,
+        button_labels: ['Next', 'Begin Categorizing', 'Next Animal', 'Next Animal', 'Next Animal', 'Finish'],
+        items: [3, 8, 9, 4],
+        start_idx: -2,
         data: {'part': 'tutorial', 'condition': 'TUT1'}
     }
 
     var tutorial_debrief_1 = {
         type: jsPsychHtmlKeyboardResponse,
-        stimulus: "<div><p style='font-size: 20px;'>Congratulations! You've completed the first stage of the tutorial. Notice how all the circles you were shown were red and belonged to the same category. That is totally fine. The categories do not have to be equally sized, nor does every category have to be used.</p> <p>Press any key to move on to the next stage.</p></div>",
+        stimulus: "<div><p style='font-size: 20px;'>Congratulations! You've completed the first stage of the tutorial. All 4 of the animals you were shown should have been placed into the same category (on the left). This is totally normal, you might come across a taxonomy that has way more members in one category than the other. For now have just seen Birds and Mammals but there are more animals to come.</p> <p>Press any key to continue...</p></div>",
         data: {'part': 'tutorial-debrief'}
     }
 
-    var tutorial_2 = {
-        type: jsPsychAdaptiveHierarchy,
-        start_tree: function(){
-            var past_tutorials = jsPsych.data.get().filter({trial_type: "hierarchical-categorization"});
-            return past_tutorials.trials[past_tutorials.trials.length-1].final_tree; 
-        },
-        items: [12, 15, 16, 13, 17, 14, 9],
-        depth: 2,
-        title: 'Practice Taxonomy 1',
-        practice_mode: true,
-        button_labels: ['Begin Categorizing', 'Next Alien', 'Next Alien', 'Next Alien', 'Finish'],
-        prompts: [
-            "<p>Here is the same taxonomy. It includes the items you've already added to the hierarchy. In this part we will categorize more aliens to explore some other options you have when categorizing. Press 'Begin Categorization' when you are ready to start.</p>",
+    // var tutorial_2 = {
+    //     type: jsPsychAdaptiveHierarchy,
+    //     start_tree: function(){
+    //         var past_tutorials = jsPsych.data.get().filter({trial_type: "hierarchical-categorization"});
+    //         return past_tutorials.trials[past_tutorials.trials.length-1].final_tree; 
+    //     },
+    //     items: [],
+    //     depth: 2,
+    //     title: 'Animal Kingdom Part 2',
+    //     button_labels: ['Begin Categorizing', 'Next Animal', 'Next Animal', 'Next Animal', 'Finish'],
+    //     prompts: [
 
-            "<p>Here is another circle representing a new alien. Unlike in the previous round, this item should be placed into the category with the other yellow circles. Please do so and then click 'Next Alien'.</p>",
+    // ],
+    //     item_loc: "{{url_for('static', filename='stimuli/Practice 1/')}}",
+    //     data: {'part': 'tutorial', 'condition': 'TUT2'}
 
-            "<p>Now here is another alien. This alien is not red or yellow, it is orange. Hover over the text that says 'New Category' and observe how it turns red. Try clicking this and see how the alien moves from the box to a new category. Then click 'Next alien'.</p>",
+    // }
 
-            "<p>Here is an alien whose membership might be less clear. Try clicking on the category you think it most fits, however instead of immediately clicking next alien, try moving it between all the categories you can add an item to. Decide which category you think it best matches as then click 'Next Alien'. REMEMBER, once you click next, you can't move the alien anymore. </p>",
-
-            "<p>Here are a few more aliens to categorize to get you familiar with the setting. Keep adding them until you can click 'Finish'</p>",
-
-            "<p>Here are a few more aliens to categorize to get you familiar with the setting. Keep adding them until you can click 'Finish'</p>",
-
-            "<p>Here are a few more aliens to categorize to get you familiar with the setting. Keep adding them until you can click 'Finish'</p>",
-
-            "<p>Here are a few more aliens to categorize to get you familiar with the setting. Keep adding them until you can click 'Finish'</p>",
-
-    ],
-        item_loc: "{{url_for('static', filename='stimuli/Practice 1/')}}",
-        data: {'part': 'tutorial', 'condition': 'TUT2'}
-
-    }
-
-    var tutoria_3 = {
-        type: jsPsychAdaptiveHierarchy,
-
-    }
+    // let practice_3d = load_json_file("{{url_for('static', filename='taxonomies/tree3Dpractice.json')}}");
+    // var tutoria_3 = {
+    //     type: jsPsychAdaptiveHierarchy,
+    //     start_tree: practice_3d,
+    //     depth: 3, 
+    //     title: "Animal Kingdom Part 3"
+    // }
 
     var practice_loop = {
-        timeline: [instructions, tutorial_1, tutorial_debrief_1, tutorial_2, sanityCheck, feedback],
+        timeline: [instructions, tutorial_1, tutorial_debrief_1, sanityCheck, feedback],
         loop_function: function(data) {
             console.log(data);
             if (data.values()[4].pass == true) { 
