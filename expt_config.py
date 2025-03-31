@@ -95,7 +95,10 @@ def full_debrief():
 
 def get_data(opts):
     # Setup experiment tasks
-    cond = opts['condition']
+    if 'condition' not in opts.keys():
+        cond = str(random.randint(1, 6))
+    else:
+        cond = opts['condition']
     trial_set = fetch_trials(cond)
     trial_codes = fetch_codes(trial_set)
     stimuli_paths, species_names = fetch_stimuli()
