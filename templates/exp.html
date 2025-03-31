@@ -367,8 +367,7 @@
         button_labels: ['Begin Categorizing', 'Next Alien', 'Next Alien', 'Finish'],
         items: [9, 10, 11],
         practice_mode: true,
-        disable_new_cat: true, 
-        data: {'part': 'tutorial'}
+        data: {'part': 'tutorial', 'condition': 'TUT1'}
     }
 
     var tutorial_debrief_1 = {
@@ -387,7 +386,6 @@
         depth: 2,
         title: 'Practice Taxonomy 1',
         practice_mode: true,
-        disable_new_cat: false, 
         button_labels: ['Begin Categorizing', 'Next Alien', 'Next Alien', 'Next Alien', 'Finish'],
         prompts: [
             "<p>Here is the same taxonomy. It includes the items you've already added to the hierarchy. In this part we will categorize more aliens to explore some other options you have when categorizing. Press 'Begin Categorization' when you are ready to start.</p>",
@@ -408,7 +406,7 @@
 
     ],
         item_loc: "{{url_for('static', filename='stimuli/Practice 1/')}}",
-        data: {'part': 'tutorial'}
+        data: {'part': 'tutorial', 'condition': 'TUT2'}
 
     }
 
@@ -421,13 +419,13 @@
         timeline: [instructions, tutorial_1, tutorial_debrief_1, tutorial_2, sanityCheck, feedback],
         loop_function: function(data) {
             console.log(data);
-            if (data.values()[4p].pass == true) { 
+            if (data.values()[4].pass == true) { 
                 return false; 
             } else { 
                 return true;
            }
         },
-        data: {'part': 'practice'}
+        data: {'part': 'tutorial'}
     }
 
     timeline.push(practice_loop);
