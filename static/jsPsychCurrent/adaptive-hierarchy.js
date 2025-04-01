@@ -207,8 +207,6 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                 let numerators = Array.from({length: trial.depth}, (_, i) => i+1);
                 const denominator = numerators.reduce((a, b) => a+b, 0);
                 let node_heights = numerators.map(n => n/denominator * available_height);
-                console.log(denominator);
-
                 // get widths of nodes such that the width is proportional to the number of nodes at that level
                 let min_width_gap = trial.min_width_gap * category_box.width;
                 let stats_by_level = {};
@@ -224,7 +222,7 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                     sizes.push(size);
 
                 }
-                let item_size = Math.min(...sizes);
+                const item_size = Math.min(...sizes);
 
                 function traverse(node) {
                     let level = node.depth;
@@ -672,9 +670,9 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                     const image_element = document.createElement('img');
                     image_element.src = trial.item_loc + "\item (" + trial.items[index] + ").png";
                     image_element.id = `stimuli-${index}`;
-                    let size = Math.min(item_display.clientWidth, item_display.clientHeight);
-                    image_element.width = size;
-                    image_element.height = size;
+                    // let size = Math.min(item_display.clientWidth, item_display.clientHeight);
+                    image_element.width = ITEM_SIZE;
+                    image_element.height = ITEM_SIZE;
                     image_element.className = 'stimuli';
                     image_element.addEventListener('load', () => {
                         item_display.appendChild(image_element);
@@ -720,6 +718,7 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
             let CATEGORY_CHANGES = [];
             let TIME = performance.now();
             let NEXT_BUTTON = document.getElementById("continue-button");
+            const ITEM_SIZE = root.data.item_size; 
             NEXT_BUTTON.addEventListener("click", function() {
                 REACTION_TIMES.push(performance.now() - TIME);
                 if (current_item > -1 ){

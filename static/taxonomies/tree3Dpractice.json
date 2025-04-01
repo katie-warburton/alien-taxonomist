@@ -1,0 +1,21 @@
+{
+    "name": "ROOT",
+    "root": true,
+    "visible": true,
+    "children": [
+        {
+            "name": "Chordates", "visible": true , "children": [
+                {"name": "Mammals", "visible": true, "items": [1, 2, 3, 4, 5], "children": []},
+                {"name": "Birds", "visible": true, "items": [6, 7, 8, 9], "children": []},
+                {"name": "AX", "visible": false, "items": [], "children": []}
+            ]
+        },
+        {
+            "name": "Molluscs", "visible": true, "children": [
+                {"name": "BX", "visible": false, "items": [], "children": []},
+                {"name": "", "visible": true, "items": [25, 26], "children": []},
+                {"name": "B2", "visible": true, "items": [29, 30], "children": []}
+            ]
+        }
+    ]
+}

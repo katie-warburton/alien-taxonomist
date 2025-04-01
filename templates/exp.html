@@ -332,13 +332,10 @@
         data: {'part': 'sanity-feedback'}
     }
 
-
-    let practice_2d = load_json_file("{{url_for('static', filename='taxonomies/tree2Dpractice.json')}}");
-    console.log(practice_2d);
     var tutorial_1 = {
         type: jsPsychAdaptiveHierarchy,
         item_loc: "{{url_for('static', filename='stimuli/Practice 1/')}}",
-        start_tree: practice_2d,
+        start_tree: load_json_file("{{url_for('static', filename='taxonomies/tree2Dpractice.json')}}"),
         depth: 2,
         title: 'Animal Kingdom Part 1',
         prompts: [
@@ -350,9 +347,9 @@
 
             "<p>Now that you have clicked 'Next Animal', you cannot move the dog. Instead, you have a new animal to categorize. This is a sparrow. Again, add it to the category it belongs to and click 'Next Animal'.</p>",
 
-            "<p>Here is a goose! Add it to the taxonomy and click 'Next Animal'.</p>",
+            "<p>Here is a goose! Add it to the taxonomy and click 'Next Animal'. Notice that when you add it to a category at the bottom, it is also added to the top level category (a.k.a. the parent category).</p>",
 
-            "<p>Finally, here is a kangaroo. This is the last animal you have to add. Notice that when you add it to a category at the bottom, it is also added to the top level category (a.k.a. the parent category). When you have added it to the taxonomy click 'Finish'.</p>"
+            "<p>Finally, here is a kangaroo. This is the last animal you have to add. When you have added it to the taxonomy click 'Finish'.</p>"
         ],
         button_labels: ['Next', 'Begin Categorizing', 'Next Animal', 'Next Animal', 'Next Animal', 'Finish'],
         items: [3, 8, 9, 4],
@@ -362,41 +359,85 @@
 
     var tutorial_debrief_1 = {
         type: jsPsychHtmlKeyboardResponse,
-        stimulus: "<div><p style='font-size: 20px;'>Congratulations! You've completed the first stage of the tutorial. All 4 of the animals you were shown should have been placed into the same category (on the left). This is totally normal, you might come across a taxonomy that has way more members in one category than the other. For now have just seen Birds and Mammals but there are more animals to come.</p> <p>Press any key to continue...</p></div>",
+        stimulus: "<div><p style='font-size: 20px;'>Congratulations! You've completed the first stage of the tutorial. All 4 of the animals you were shown should have been placed into the same category (on the left). For now have just seen some examples of birds and mammals but there are more animals to come.</p> <p>Press any key to continue...</p></div>",
         data: {'part': 'tutorial-debrief'}
     }
 
-    // var tutorial_2 = {
-    //     type: jsPsychAdaptiveHierarchy,
-    //     start_tree: function(){
-    //         var past_tutorials = jsPsych.data.get().filter({trial_type: "hierarchical-categorization"});
-    //         return past_tutorials.trials[past_tutorials.trials.length-1].final_tree; 
-    //     },
-    //     items: [],
-    //     depth: 2,
-    //     title: 'Animal Kingdom Part 2',
-    //     button_labels: ['Begin Categorizing', 'Next Animal', 'Next Animal', 'Next Animal', 'Finish'],
-    //     prompts: [
+    var tutorial_2 = {
+        type: jsPsychAdaptiveHierarchy,
+        start_tree: load_json_file("{{url_for('static', filename='taxonomies/tree2Dpractice-2.json')}}"),
+        items: [],
+        depth: 2,
+        title: 'Animal Kingdom Part 2',
+        button_labels: ['Begin Categorizing', 'Next Animal', 'Next Animal', 'Next Animal', 'Finish'],
+        prompts: [
+            "Here is the same taxonomy with the animals you've already seen placed in the correct category. You're going to be shown some more animals to add to the taxonomy so that you can become more familiar with the setup. Click 'Begin Categorizing' to start.",
 
-    // ],
-    //     item_loc: "{{url_for('static', filename='stimuli/Practice 1/')}}",
-    //     data: {'part': 'tutorial', 'condition': 'TUT2'}
+            "Here is a whale. Before you click 'Next Animal' I want you to try clicking on the right than the left category. As long as you don't click 'Next Animal' you can move the animal between any of the categories that turn red. Only continue when you are happy with the placement.",
 
-    // }
+            "Now here is a squid. Add it to one of the categories in the taxonomy and continue.",
 
-    // let practice_3d = load_json_file("{{url_for('static', filename='taxonomies/tree3Dpractice.json')}}");
-    // var tutoria_3 = {
-    //     type: jsPsychAdaptiveHierarchy,
-    //     start_tree: practice_3d,
-    //     depth: 3, 
-    //     title: "Animal Kingdom Part 3"
-    // }
+            "Here is a butterfly. This animal does not belong to either of the categories that exist in the taxonomy. To incorporate it, I want you to click 'Add Category'. Observe how a new category forms to incorporate the spider and then click 'Next Animal'.",
+
+            "Here is another butterfly. Please add each to the taxonomy and then click 'Finish'.",
+        ],
+
+        items: [5, 25, 15, 16],
+        item_loc: "{{url_for('static', filename='stimuli/Practice 1/')}}",
+        data: {'part': 'tutorial', 'condition': 'TUT2'}
+    }
+
+    var tutorial_debrief_2 = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: "<div><p style='font-size: 20px;'>Great job! Now you might have notices that the categories you added animals to could be subdivided into smaller categories. For example, the left category could have been subdivided into birds and mammals. For the next part of the tutorial you will be shown an animal taxonomy with 3 levels and be asked to add some more animals.</p> <p>Press any key to continue...</p></div>",
+        data: {'part': 'tutorial-debrief'}
+    }
+
+
+    let practice_3d = load_json_file("{{url_for('static', filename='taxonomies/tree3Dpractice.json')}}");
+    var tutorial_3 = {
+        type: jsPsychAdaptiveHierarchy,
+        start_tree: practice_3d,
+        depth: 3, 
+        item_loc: "{{url_for('static', filename='stimuli/Practice 1/')}}",
+        title: "Animal Kingdom Part 3",
+        // Ostrich, Cow, Clam, Lizard, Alligator, Snail, Cuttlefish
+        items: [10, 24, 25, 13, 0, 31, 14],
+        prompts: [
+            "Here is the animal taxonomy with 3 levels. It includes most of the animals you've already seen. In this round, you will only see animals that belong to the left or right category at th3 2nd (middle) level and you need to sort animals into subcategories at the 3rd (bottom) level. Try hovering over the categories at the second and third level. Notice which ones turn red. Click 'Begin Categorizing' to start.", 
+
+            "Here is your first animal. When you add it to the taxonomy notice how it is also added to all the categories connected to the one you add it to by an arrow. These are the parent categories. An item that belongs to a subcategory is always assumed to belong to all connected parent categories.",
+
+        
+            "You will be shown several animals to add to the taxonomy. Remember, click on the location you want to add the animal to (either an existing category or 'New Category') and then click 'Next Animal' when you are happy with its placement.",
+
+            
+            "You will be shown several animals to add to the taxonomy. Remember, click on the location you want to add the animal to (either an existing category or 'New Category') and then click 'Next Animal' when you are happy with its placement.",
+
+            
+            "You will be shown several animals to add to the taxonomy. Remember, click on the location you want to add the animal to (either an existing category or 'New Category') and then click 'Next Animal' when you are happy with its placement.",
+
+            "You will be shown several animals to add to the taxonomy. Remember, click on the location you want to add the animal to (either an existing category or 'New Category') and then click 'Next Animal' when you are happy with its placement.",
+
+            "You will be shown several animals to add to the taxonomy. Remember, click on the location you want to add the animal to (either an existing category or 'New Category') and then click 'Next Animal' when you are happy with its placement.",
+
+            "You will be shown several animals to add to the taxonomy. Remember, click on the location you want to add the animal to (either an existing category or 'New Category') and then click 'Next Animal' when you are happy with its placement."
+        ],
+
+        button_labels: ['Begin categorizing.', 'Next Animal', 'Next Animal', 'Next Animal', 'Next Animal', 'Next Animal', 'Next Animal', 'Finish']
+    }
+
+    var tutorial_debrief_3 = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: "<div><p style='font-size: 20px;'>You've finished with the tutorial! Throughout the experiment you will be shown alien taxonomies with either 2 or 3 levels. You will be asked to build the taxonomy by either incorporating aliens into the existing categories or adding a new category if you think the existing categories are not sufficient. Before you begin, you will be asked some questions to check your understanding. You will need to get them correct to proceed.</p> <p>Press any key to continue...</p></div>",
+        data: {'part': 'tutorial-debrief'}
+    }
 
     var practice_loop = {
-        timeline: [instructions, tutorial_1, tutorial_debrief_1, sanityCheck, feedback],
+        timeline: [instructions, tutorial_1, tutorial_debrief_1, tutorial_2, tutorial_debrief_2, tutorial_3, tutorial_debrief_3, sanityCheck, feedback],
         loop_function: function(data) {
             console.log(data);
-            if (data.values()[4].pass == true) { 
+            if (data.values()[7].pass == true) { 
                 return false; 
             } else { 
                 return true;

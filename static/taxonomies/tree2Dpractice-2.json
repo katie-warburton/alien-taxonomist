@@ -6,7 +6,7 @@
         {
             "name": "Chordates",
             "visible": true,
-            "items": [1, 2, 6, 7],
+            "items": [1, 2, 3, 4, 6, 7, 8, 9],
             "children": []
         },
         {
