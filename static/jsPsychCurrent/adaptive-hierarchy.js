@@ -121,7 +121,7 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
             document.head.appendChild(style);
             console.log(trial.items, trial.data.condition);
 
-            // Define the base HTML for the trial
+            // Define the base HTML for the trial (Note: should probably put this into a css file instead at some point)
             let html = '';
             html += '<div class ="jspsych-display-element" style="display: grid; grid-template-columns: 6fr 79fr 1fr 8fr 6fr; grid-template-rows: 2fr 5fr 1fr 11fr 2fr 73fr 1fr 5fr 1fr; height: 96vh; width: 96vw; margin: auto; padding: 0;">';
             html += '<div id="title-container" style="grid-row: 2; grid-column: 2; text-align: left; display:flex; align-items: center; height: 100%; width: 100%;">';
@@ -144,7 +144,7 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
             let BUILD_MODE = false;
             let ITEM_LOC = null;
 
-            // Define key functions for the code
+            // Calculate various node parameters and store them
             function get_node_info(tree) {
                 let nodes_by_level = {};
                 let nodes_by_name = {};
@@ -173,7 +173,7 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
             return nodes_by_level;
             }         
 
-            // Define the function to get the best size for the items in the tree such that they fit into the space and have y rows and x columns. 
+            // Get the best size for the items in the tree such that they fit into the space and have y rows and x columns. 
             function get_best_item_size(n, width, height) {
                 let best_size = 0;
                 let best_rows = 1;
@@ -223,7 +223,7 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
 
                 }
                 const item_size = Math.min(...sizes);
-
+                // assign properties that determine the size of a node in the display
                 function traverse(node) {
                     let level = node.depth;
                     let index = node.index;
@@ -246,6 +246,7 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                 traverse(tree);
             }
 
+            // Get X and Y coordinates of a link
             function calculate_link_xy (source, target) {
                 let source_x = source.data.center_x;
                 let source_y = source.data.y + source.data.height;
@@ -287,11 +288,9 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                 let item_display = document.getElementById("item-display");
                 item_display.innerHTML = '';
 
-                // might need to fix this for removal??
                 if (d.data.items.length  < d.data.cols+1) {
-
+                    // shift the circle so its centered
                     node.attr("transform", d => "translate(" + get_x_edge(d.data) + "," + d.data.y + ")");
-                        // shift the circle so its centered
                     node.select("circle")
                     .attr("cx", d.data.width/2);
                 }
@@ -330,7 +329,6 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                     .attr("height", d => d.data.height);
 
                     // remove only the last image from the node
-
                     if (d.data.items.length  < d.data.cols) {
                         node.attr("transform", d => "translate(" + get_x_edge(d.data) + "," + d.data.y + ")");
                         node.select("circle")
@@ -670,7 +668,6 @@ var jsPsychAdaptiveHierarchy = (function (jspsych) {
                     const image_element = document.createElement('img');
                     image_element.src = trial.item_loc + "\item (" + trial.items[index] + ").png";
                     image_element.id = `stimuli-${index}`;
-                    // let size = Math.min(item_display.clientWidth, item_display.clientHeight);
                     image_element.width = ITEM_SIZE;
                     image_element.height = ITEM_SIZE;
                     image_element.className = 'stimuli';
